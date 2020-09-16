@@ -3,10 +3,12 @@ package com.github.wumke.RNImmediatePhoneCall;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.Context;
 import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import android.telecom.TelecomManager;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -19,6 +21,7 @@ public class RNImmediatePhoneCallModule extends ReactContextBaseJavaModule {
     private ReactApplicationContext reactContext;
     private static String number = "";
     private static final int PERMISSIONS_REQUEST_ACCESS_CALL = 101;
+    private static final int PERMISSIONS_ANSWER_CALLS = 102;
 
     public RNImmediatePhoneCallModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -53,6 +56,20 @@ public class RNImmediatePhoneCallModule extends ReactContextBaseJavaModule {
         Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(url));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         rnImmediatePhoneCallModule.reactContext.startActivity(intent);
+    }
+
+    @ReactMethod
+    public void immediateEndCall() {
+        if (ContextCompat.checkSelfPermission(getReactApplicationContext(),
+                android.Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+            TelecomManager telecomManager = (TelecomManager) getReactApplicationContext().getSystemService(Context.TELECOM_SERVICE);
+            telecomManager.endCall();
+        } else {
+            ActivityCompat.requestPermissions(getCurrentActivity(),
+                    new String[]{android.Manifest.permission.ANSWER_PHONE_CALLS},
+                    PERMISSIONS_ANSWER_CALLS);
+        }
+
     }
 
     public static void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
